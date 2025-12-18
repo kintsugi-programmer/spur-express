@@ -376,3 +376,4 @@ curl -X POST http://localhost:3000/chat/message \
     ]
 }
 ```
+![alt text](screenshots/image.png)
