@@ -11,7 +11,7 @@ mkdir backend frontend
 cd backend
 npm init -y
 npm install express cors dotenv
-npm install -D typescript ts-node-dev @types/node @types/express
+npm install -D typescript ts-node-dev @types/node @types/express @types/cors
 npx tsc --init
 ```
 - tsconfig.json: Configured TypeScript for a stable Node.js backend with strict type safety and a clear source-to-build output flow.
