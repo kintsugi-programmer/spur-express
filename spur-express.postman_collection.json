@@ -1,0 +1,46 @@
+{
+	"info": {
+		"_postman_id": "36af8fce-ffb9-492c-a009-5cdecd216212",
+		"name": "spur-express",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "43597602",
+		"_collection_link": "https://siddhantbali.postman.co/workspace/Siddhant-Bali's-Workspace~aa45828a-f45f-44f3-88be-317b8266fb88/collection/43597602-36af8fce-ffb9-492c-a009-5cdecd216212?action=share&source=collection_link&creator=43597602"
+	},
+	"item": [
+		{
+			"name": "http://localhost:3000/chat/message",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"message\": \"Do you ship to USA?\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/chat/message",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"chat",
+						"message"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
