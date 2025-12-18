@@ -1,0 +1,25 @@
+# Dependencies
+node_modules
+/coverage
+
+# package-lock.json (only if using yarn)
+# yarn.lock (only if using npm)
+
+# Log files
+*.log
+npm-debug.log*
+yarn-error.log*
+
+# Environment files
+.env
+.env.development
+.env.test
+
+# OS and IDE files
+.DS_Store
+Thumbs.db
+.vscode/
+
+# Build artifacts
+/dist
+/build
