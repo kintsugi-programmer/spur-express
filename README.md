@@ -12,6 +12,7 @@
     - [feat: connect backend to Supabase Postgres and verify db health](#feat-connect-backend-to-supabase-postgres-and-verify-db-health)
     - [feat: implement chat message API with session-based conversations](#feat-implement-chat-message-api-with-session-based-conversations)
     - [feat: integrate Gemini LLM for contextual chat replies](#feat-integrate-gemini-llm-for-contextual-chat-replies)
+    - [chore(backend): deploy service on Render and fix Postgres DNS issue](#chorebackend-deploy-service-on-render-and-fix-postgres-dns-issue)
 
 ---
 
@@ -554,5 +555,38 @@ POST http://localhost:3000/chat/message
     ]
 }
 ```
+
+---
+
+### chore(backend): deploy service on Render and fix Postgres DNS issue
+
+- deployed web service on render
+- https://spur-express.onrender.com
+- backend/src/db/index.ts: dns fix for render
+```ts
+import pg from "pg";
+import dns from "dns";
+
+dns.setDefaultResultOrder("ipv4first");
+
+if (!process.env.DATABASE_URL) {
+  throw new Error("DATABASE_URL is missing");
+}
+
+export const pool = new pg.Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false,
+  },
+});
+
+```
+- change database uri from supabase: server level fix
+```
+postgresql://postgres.tsiyiiuigktokobvclsl:[YOUR-PASSWORD]@aws-1-ap-south-1.pooler.supabase.com:6543/postgres
+```
+- check: 200 DONE !!!
+![alt text](screenshots/image-1.png)
+![alt text](screenshots/image-2.png)
 
 ---
