@@ -3,6 +3,18 @@
 
 ---
 
+## Table of Contents
+- [spur-express](#spur-express)
+  - [Table of Contents](#table-of-contents)
+  - [Journey](#journey)
+    - [Setup Github Repo: spur-express github repo](#setup-github-repo-spur-express-github-repo)
+    - [chore: bootstrap Express + TypeScript backend with health check and gitignore](#chore-bootstrap-express--typescript-backend-with-health-check-and-gitignore)
+    - [feat: connect backend to Supabase Postgres and verify db health](#feat-connect-backend-to-supabase-postgres-and-verify-db-health)
+    - [feat: implement chat message API with session-based conversations](#feat-implement-chat-message-api-with-session-based-conversations)
+    - [feat: integrate Gemini LLM for contextual chat replies](#feat-integrate-gemini-llm-for-contextual-chat-replies)
+
+---
+
 ## Journey
 
 ### Setup Github Repo: [spur-express github repo](https://github.com/kintsugi-programmer/spur-express)
