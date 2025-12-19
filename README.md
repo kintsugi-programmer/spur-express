@@ -1,4 +1,5 @@
 # spur-express
+- Production: [https://spur-express.vercel.app/](https://spur-express.vercel.app/)
 - [spur-express github repo](https://github.com/kintsugi-programmer/spur-express)
 
 **TL;DR**
@@ -9,6 +10,8 @@
 - Frontend uses AI-assisted UI scaffolding; all logic and architecture are hand-written.
 - Deployed: Render (backend) + Vercel (frontend).
 
+![alt text](image-1.png)
+
 This repo documents the complete engineering journey, architectural decisions, and tradeoffs.
 
 ---
@@ -17,16 +20,6 @@ This repo documents the complete engineering journey, architectural decisions, a
 - [spur-express](#spur-express)
   - [Table of Contents](#table-of-contents)
   - [Features \& Engineering Decisions](#features--engineering-decisions)
-    - [Backend foundation](#backend-foundation)
-    - [Data and persistence](#data-and-persistence)
-    - [Chat domain logic](#chat-domain-logic)
-    - [LLM integration](#llm-integration)
-    - [Production deployment learnings](#production-deployment-learnings)
-    - [Frontend architecture](#frontend-architecture)
-    - [UI and logic separation](#ui-and-logic-separation)
-    - [Session handling and UX](#session-handling-and-ux)
-    - [File structure and intuition](#file-structure-and-intuition)
-    - [End-to-end delivery](#end-to-end-delivery)
   - [Journey](#journey)
     - [Setup Github Repo: spur-express github repo](#setup-github-repo-spur-express-github-repo)
     - [chore: bootstrap Express + TypeScript backend with health check and gitignore](#chore-bootstrap-express--typescript-backend-with-health-check-and-gitignore)
@@ -42,70 +35,62 @@ This repo documents the complete engineering journey, architectural decisions, a
     - [Why Gemini 2.5 Flash?](#why-gemini-25-flash)
   - [AI Usage Disclosure](#ai-usage-disclosure)
   - [Future Improvements](#future-improvements)
+  - [Offline / Local Run Instructions](#offline--local-run-instructions)
 
 ---
 
 ## Features & Engineering Decisions
-
-### Backend foundation
-- Built a clean Express + TypeScript backend with a clear separation between routing, controllers, and services.
-- Added health and database health endpoints early to make local development and deployment issues visible immediately.
-- Designed the backend to be production-ready from day one, not a throwaway prototype.
-
-### Data and persistence
-- Integrated Supabase Postgres using a pooled connection strategy to avoid per-request database connections.
-- Modeled conversations and messages explicitly, mirroring how real support chat systems work.
-- Ensured messages are always returned in a deterministic order from the database.
-- Treated the database as the single source of truth for conversation state.
-
-### Chat domain logic
-- Implemented session-based conversations using UUIDs, allowing chat continuity without authentication.
-- Designed the API to create a conversation implicitly when a sessionId is not present.
-- Centralized all chat business logic inside a service layer, completely isolated from HTTP concerns.
-- Validated inputs early to prevent invalid or empty messages from entering the system.
-
-### LLM integration
-- Integrated Gemini 2.5 Flash for fast, cost-effective chat responses.
-- Kept LLM logic in a dedicated service with deterministic prompt construction.
-- Injected conversation history explicitly instead of relying on hidden model state.
-- Added graceful fallbacks so LLM failures never crash the API or frontend.
-- Designed the system so the LLM provider can be swapped later with minimal changes.
-
-### Production deployment learnings
-- Deployed the backend on Render and encountered a real-world Postgres IPv6 DNS issue.
-- Diagnosed and fixed the issue by forcing IPv4 resolution at the Node runtime level.
-- Treated deployment issues as part of the system design, not “infra noise.”
-
-### Frontend architecture
-- Initially planned to build the frontend using Next.js for its ecosystem and conventions.
-- Re-evaluated this choice after recent Next.js instability and breaking changes around routing and app setup.(Update to Next.js 15.1.4, 14.2.23, or 13.5.8 immediately to patch CVE-2025-22188, a critical Server-Side Request Forgery (SSRF) vulnerability.)
-- Chose Vite + React instead for faster iteration, simpler mental model, and full control over client-side behavior.
-- Optimized for predictability and correctness over framework-driven abstractions.
-
-### UI and logic separation
-- Used AI tools to accelerate UI and animation scaffolding, treating the UI strictly as a replaceable shell.
-- Designed all chat components to be presentational and stateless by default.
-- Centralized state management, side effects, and API calls in the page layer.
-- Avoided optimistic UI updates to prevent race conditions and duplicate messages.
-- Disabled user input while requests are in flight to maintain message integrity.
-
-### Session handling and UX
-- Stored sessionId in localStorage to persist conversations across reloads.
-- Ensured conversation continuity without forcing user accounts or login flows.
-- Added a typing indicator to surface LLM latency instead of hiding it.
-- Implemented defensive UI error handling so the app never crashes on bad responses.
-
-### File structure and intuition
-- Organized files by responsibility rather than by framework convention.
-- Pages own orchestration and side effects.
-- Components render UI and receive all data via props.
-- Services encapsulate business logic and external integrations.
-- This hierarchy makes the system easy to reason about, test, and extend.
-
-### End-to-end delivery
-- Deployed the frontend on Vercel and the backend on Render.
-- Verified full end-to-end chat flow from browser to database to LLM and back.
-- Built the system to resemble real production customer support chat behavior, not a demo.
+![alt text](image.png)
+- Backend foundation
+  - Built a clean Express + TypeScript backend with a clear separation between routing, controllers, and services.
+  - Added health and database health endpoints early to make local development and deployment issues visible immediately.
+  - Designed the backend to be production-ready from day one, not a throwaway prototype.
+- Data and persistence
+  - Integrated Supabase Postgres using a pooled connection strategy to avoid per-request database connections.
+  - Modeled conversations and messages explicitly, mirroring how real support chat systems work.
+  - Ensured messages are always returned in a deterministic order from the database.
+  - Treated the database as the single source of truth for conversation state.
+- Chat domain logic
+  - Implemented session-based conversations using UUIDs, allowing chat continuity without authentication.
+  - Designed the API to create a conversation implicitly when a sessionId is not present.
+  - Centralized all chat business logic inside a service layer, completely isolated from HTTP concerns.
+  - Validated inputs early to prevent invalid or empty messages from entering the system.
+- LLM integration
+  - Integrated Gemini 2.5 Flash for fast, cost-effective chat responses.
+  - Kept LLM logic in a dedicated service with deterministic prompt construction.
+  - Injected conversation history explicitly instead of relying on hidden model state.
+  - Added graceful fallbacks so LLM failures never crash the API or frontend.
+  - Designed the system so the LLM provider can be swapped later with minimal changes.
+- Production deployment learnings
+  - Deployed the backend on Render and encountered a real-world Postgres IPv6 DNS issue.
+  - Diagnosed and fixed the issue by forcing IPv4 resolution at the Node runtime level.
+  - Treated deployment issues as part of the system design, not “infra noise.”
+- Frontend architecture
+  - Initially planned to build the frontend using Next.js for its ecosystem and conventions.
+  - Re-evaluated this choice after recent Next.js instability and breaking changes around routing and app setup.(Update to Next.js 15.1.4, 14.2.23, or 13.5.8 immediately to patch CVE-2025-22188, a critical Server-Side Request Forgery (SSRF) vulnerability.)
+  - Chose Vite + React instead for faster iteration, simpler mental model, and full control over client-side behavior.
+  - Optimized for predictability and correctness over framework-driven abstractions.
+- UI and logic separation
+  - Used AI tools to accelerate UI and animation scaffolding, treating the UI strictly as a replaceable shell.
+  - Designed all chat components to be presentational and stateless by default.
+  - Centralized state management, side effects, and API calls in the page layer.
+  - Avoided optimistic UI updates to prevent race conditions and duplicate messages.
+  - Disabled user input while requests are in flight to maintain message integrity.
+- Session handling and UX
+  - Stored sessionId in localStorage to persist conversations across reloads.
+  - Ensured conversation continuity without forcing user accounts or login flows.
+  - Added a typing indicator to surface LLM latency instead of hiding it.
+  - Implemented defensive UI error handling so the app never crashes on bad responses.
+- File structure and intuition
+  - Organized files by responsibility rather than by framework convention.
+  - Pages own orchestration and side effects.
+  - Components render UI and receive all data via props.
+  - Services encapsulate business logic and external integrations.
+  - This hierarchy makes the system easy to reason about, test, and extend.
+- End-to-end delivery
+  - Deployed the frontend on Vercel and the backend on Render.
+  - Verified full end-to-end chat flow from browser to database to LLM and back.
+  - Built the system to resemble real production customer support chat behavior, not a demo.
 
 ---
 
@@ -827,3 +812,60 @@ Index.tsx (page)
 - Apply rate limiting and basic abuse protection
 - Improve prompt iteration and response quality checks
 - Add frontend tests to guard against race conditions
+
+--- 
+
+## Offline / Local Run Instructions
+
+Prerequisites
+
+* Node.js (v18+)
+* npm
+* Supabase Postgres database
+* Gemini API key
+
+Steps
+
+1. Clone the repository
+   git clone [https://github.com/kintsugi-programmer/spur-express.git](https://github.com/kintsugi-programmer/spur-express.git)
+   cd spur-express
+
+2. Start backend
+   cd backend
+   npm install
+
+Create a .env file with:
+PORT=3000
+DATABASE_URL=postgresql://postgres:YOUR_PASSWORD@db.xxxxx.supabase.co:5432/postgres
+GEMINI_API_KEY=your_gemini_api_key
+
+Run backend:
+npm run dev
+
+Backend should be available at:
+[http://localhost:3000/health](http://localhost:3000/health)
+[http://localhost:3000/db-health](http://localhost:3000/db-health)
+
+3. Start frontend
+   cd ../frontend
+   npm install
+   npm run dev
+
+Open in browser:
+[http://localhost:5173](http://localhost:5173)
+
+Usage
+
+* Open the frontend URL
+* Start chatting immediately
+* Conversation persists using localStorage
+
+Notes
+
+* Backend must be running before frontend
+* Backend is the source of truth
+* App handles LLM errors gracefully
+
+--- 
+
+Thank You !!!
