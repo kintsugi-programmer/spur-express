@@ -818,6 +818,7 @@ Index.tsx (page)
 - The UI is treated as a replaceable shell; logic correctness was the primary goal.
 
 --- 
+
 ## Future Improvements
 
 - Stream AI responses for a more real-time chat experience
