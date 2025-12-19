@@ -41,6 +41,42 @@
 				}
 			},
 			"response": []
+		},
+		{
+			"name": "https://spur-express.onrender.com/chat/message",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"message\": \"Do you ship to USA?\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://spur-express.onrender.com/chat/message",
+					"protocol": "https",
+					"host": [
+						"spur-express",
+						"onrender",
+						"com"
+					],
+					"path": [
+						"chat",
+						"message"
+					]
+				}
+			},
+			"response": []
 		}
 	]
 }
