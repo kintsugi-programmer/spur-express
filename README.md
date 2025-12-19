@@ -5,11 +5,11 @@
 
 ## Journey
 
-- Setup Github Repo: [spur-express github repo](https://github.com/kintsugi-programmer/spur-express)
+### Setup Github Repo: [spur-express github repo](https://github.com/kintsugi-programmer/spur-express)
 
 ---
 
-- chore: bootstrap Express + TypeScript backend with health check and gitignore
+### chore: bootstrap Express + TypeScript backend with health check and gitignore
 - Project initialization
 ```bash
 mkdir backend frontend
@@ -85,7 +85,7 @@ http://localhost:3000/health
 
 ---
 
-- feat: connect backend to Supabase Postgres and verify db health
+### feat: connect backend to Supabase Postgres and verify db health
 - init supabase project 'spur-express'
   - db URI
     - conn. str. : `postgresql://postgres:<PASSWORD>@db.xxxxx.supabase.co:5432/postgres`
@@ -179,7 +179,7 @@ http://localhost:3000/db-health
 
 --- 
 
-- feat: implement chat message API with session-based conversations
+### feat: implement chat message API with session-based conversations
 - init: Creates folders and files to separate routes, controllers, and services so chat logic stays clean and organized.
 ```bash
 mkdir -p src/routes src/controllers src/services
@@ -377,3 +377,170 @@ curl -X POST http://localhost:3000/chat/message \
 }
 ```
 ![alt text](screenshots/image.png)
+
+--- 
+
+### feat: integrate Gemini LLM for contextual chat replies
+- Gemini LLM API init
+  - gemini-2.5-flash
+    - Text-out model
+    - Fast & cheap
+    - Fully supported for chat use cases
+    - Exactly what Google recommends for general chat now
+  - gemini-2.5-flash-tts: text-to-speech (wrong)
+  - gemini-2.5-flash-native-audio-dialog: audio/live API (wrong)
+  - gemini-3-flash: newer, sometimes gated / unstable
+  - gemma-*: open models, not Gemini chat API
+  - robotics / preview models: not for chat
+```bash
+npm install @google/generative-ai
+```
+```bash
+# backend/.env
+GEMINI_API_KEY=your_api_key_here
+```
+- backend/src/services/llm.service.ts
+  - LLM logic is isolated
+  - Prompt is deterministic
+  - FAQ knowledge is injected
+  - Errors are handled gracefully
+  - Easy to swap Gemini → OpenAI later
+```ts
+import { GoogleGenerativeAI } from "@google/generative-ai";
+// console.log("Gemini key loaded:", !!process.env.GEMINI_API_KEY);
+
+if (!process.env.GEMINI_API_KEY) {
+  throw new Error("GEMINI_API_KEY is missing");
+}
+
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+
+const model = genAI.getGenerativeModel({
+  model: "gemini-2.5-flash",
+});
+
+const SYSTEM_PROMPT = `
+You are a helpful customer support agent for a small e-commerce store.
+
+Store policies:
+- Shipping: Ships in 3-5 business days. We ship to India and USA.
+- Returns: 7-day return policy. Items must be unused.
+- Support hours: Monday to Friday, 10am-6pm IST.
+
+Answer clearly, concisely, and politely.
+If you are unsure, say you don't know.
+`;
+
+export async function generateReply(
+  history: { sender: string; text: string }[],
+  userMessage: string
+): Promise<string> {
+  try {
+    const conversation = history
+      .map(m => `${m.sender}: ${m.text}`)
+      .join("\n");
+
+    const prompt = `
+${SYSTEM_PROMPT}
+
+Conversation so far:
+${conversation}
+
+User: ${userMessage}
+AI:
+`;
+
+    const result = await model.generateContent(prompt);
+    const response = result.response.text();
+
+    return response.trim();
+  } catch (error) {
+    console.error("Gemini error:", error);
+    return "Sorry, I'm having trouble responding right now. Please try again later.";
+  }
+}
+
+```
+- Modify backend/src/controllers/chat.controller.ts: Replace dummy reply with Gemini
+  - SDK usage
+  - Prompt construction
+  - History injection
+  - Error handling
+  - Guardrails
+```ts
+import { Request, Response } from "express";
+import {
+  createConversation,
+  saveMessage,
+  getConversationHistory,
+} from "../services/chat.service";
+import { generateReply } from "../services/llm.service";
+
+export async function postMessage(req: Request, res: Response) {
+  const { message, sessionId } = req.body;
+
+  if (!message || typeof message !== "string" || !message.trim()) {
+    return res.status(400).json({ error: "Message is required" });
+  }
+
+  const conversationId = sessionId || await createConversation();
+
+  await saveMessage(conversationId, "user", message);
+
+  // // TEMP reply (LLM comes next phase) 
+  // const reply = "Thanks! Your message has been received.";
+
+  // fetch history BEFORE LLM call
+  const history = await getConversationHistory(conversationId);
+
+  const reply = await generateReply(history, message);
+
+  await saveMessage(conversationId, "ai", reply);
+
+  // fetch updated history (includes AI reply)
+  const updatedHistory = await getConversationHistory(conversationId);
+
+  res.json({
+    reply,
+    sessionId: conversationId,
+    history: updatedHistory,
+  });
+}
+
+```
+- Restart Server and Same Postman Test
+```
+POST http://localhost:3000/chat/message
+```
+```
+{
+  "message": "Do you ship to USA?"
+}
+```
+- Output
+  - API endpoint works
+  - Conversation created
+  - User message saved
+  - History fetched
+  - generateReply() called
+  - Error handling executed
+  - AI reply saved
+  - Response returned
+```json
+{
+    "reply": "Yes, we do! We ship to both USA and India.",
+    "sessionId": "eab018be-16f8-43c6-bc4b-8303b2baeac7",
+    "history": [
+        {
+            "sender": "user",
+            "text": "Do you ship to USA?"
+        },
+        {
+            "sender": "ai",
+            "text": "Yes, we do! We ship to both USA and India."
+        }
+    ]
+}
+```
+
+---

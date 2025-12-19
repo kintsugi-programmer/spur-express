@@ -4,6 +4,7 @@ import {
   saveMessage,
   getConversationHistory,
 } from "../services/chat.service";
+import { generateReply } from "../services/llm.service";
 
 export async function postMessage(req: Request, res: Response) {
   const { message, sessionId } = req.body;
@@ -16,16 +17,22 @@ export async function postMessage(req: Request, res: Response) {
 
   await saveMessage(conversationId, "user", message);
 
-  // TEMP reply (LLM comes next phase)
-  const reply = "Thanks! Your message has been received.";
+  // // TEMP reply (LLM comes next phase) 
+  // const reply = "Thanks! Your message has been received.";
+
+  // fetch history BEFORE LLM call
+  const history = await getConversationHistory(conversationId);
+
+  const reply = await generateReply(history, message);
 
   await saveMessage(conversationId, "ai", reply);
 
-  const history = await getConversationHistory(conversationId);
+  // fetch updated history (includes AI reply)
+  const updatedHistory = await getConversationHistory(conversationId);
 
   res.json({
     reply,
     sessionId: conversationId,
-    history,
+    history: updatedHistory,
   });
 }
